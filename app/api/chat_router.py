@@ -4,6 +4,9 @@ from fastapi import APIRouter, HTTPException
 
 from app.api.chat_service import chat
 from app.models import ChatRequest, ChatResponse, SourceReference, SQLResult
+from fastapi.responses import StreamingResponse
+from app.api.chat_service import chat_stream
+
 
 router = APIRouter()
 
@@ -14,6 +17,7 @@ def chat_endpoint(request: ChatRequest):
     try:
         result = chat(message=request.message)
     except Exception as exc:
+        print(f"Agent error: {exc}")
         raise HTTPException(status_code=500, detail=f"Agent error: {exc}")
 
     sources = [
@@ -41,3 +45,10 @@ def chat_endpoint(request: ChatRequest):
         sources=sources,
         sql_result=sql_result,
     )
+
+@router.post("/chat/stream")
+async def chat_stream_endpoint(request: ChatRequest):
+    async def generate():
+        async for token in chat_stream(request.message):
+            yield token
+    return StreamingResponse(generate(), media_type="text/plain")

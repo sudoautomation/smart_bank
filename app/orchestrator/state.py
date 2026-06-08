@@ -14,3 +14,4 @@ class AgentState(TypedDict):
     sources:           list[dict]
     sql_result:        Optional[dict]
     intent:            str
+    tool_call_id:       Optional[str]

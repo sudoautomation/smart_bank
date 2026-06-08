@@ -38,23 +38,34 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-### Chat input (pinned to bottom by Streamlit) 
+### Chat input (pinned to bottom by Streamlit)
 if prompt := st.chat_input("Ask BankIQ anything…"):
+
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    with st.spinner("Thinking…"):
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    with st.chat_message("assistant"):
         try:
-            resp = requests.post(
-                f"{API_BASE}/chat",
-                json={"message": prompt},
-                timeout=120,
-            )
-            resp.raise_for_status()
-            answer = resp.json()["answer"]
+            def token_generator():
+                with requests.post(
+                    f"{API_BASE}/chat/stream",
+                    json={"message": prompt},
+                    stream=True,
+                    timeout=120,
+                ) as resp:
+                    resp.raise_for_status()
+                    for chunk in resp.iter_content(chunk_size=None, decode_unicode=True):
+                        if chunk:
+                            yield chunk
+
+            answer = st.write_stream(token_generator())
         except requests.exceptions.ConnectionError:
-            answer = "⚠️ Cannot reach the API. Run `python main.py` first."
+            answer = "⚠️ Cannot reach the API."
+            st.markdown(answer)
         except Exception as exc:
             answer = f"⚠️ Error: {exc}"
+            st.markdown(answer)
 
     st.session_state.messages.append({"role": "assistant", "content": answer})
-    st.rerun()
