@@ -2,8 +2,14 @@ from pydantic import BaseModel, Field
 from typing import Optional
 
 
+class ConversationMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
+
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=4000)
+    conversation_history: list[ConversationMessage] = []
 
 
 class SourceReference(BaseModel):

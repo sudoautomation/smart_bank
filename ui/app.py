@@ -40,18 +40,19 @@ for msg in st.session_state.messages:
 
 ### Chat input (pinned to bottom by Streamlit)
 if prompt := st.chat_input("Ask BankIQ anything…"):
-
     st.session_state.messages.append({"role": "user", "content": prompt})
-
     with st.chat_message("user"):
         st.markdown(prompt)
-
     with st.chat_message("assistant"):
         try:
             def token_generator():
+                history = [
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state.messages[:-1]  # exclude the just-added user message
+                ]
                 with requests.post(
                     f"{API_BASE}/chat/stream",
-                    json={"message": prompt},
+                    json={"message": prompt, "conversation_history": history},
                     stream=True,
                     timeout=120,
                 ) as resp:

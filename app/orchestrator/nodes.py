@@ -10,9 +10,10 @@ from config import MAX_RETRY, REPHRASER_TEMPERATURE
 
 def agent_node(state: AgentState) -> AgentState:
     """Invoke the LLM. Emits tool calls or a final answer."""
+    print(f"Agent received question: {state['question']}")
     llm = get_chat_llm().bind_tools(TOOLS)
     response = llm.invoke(
-        [SystemMessage(content=AGENT_SYSTEM_PROMPT)] + state["messages"]
+        [SystemMessage(content=AGENT_SYSTEM_PROMPT)] + state["messages"],
     )
     updates: AgentState = {"messages": [response]}
     if response.tool_calls:
@@ -40,6 +41,7 @@ def rephraser_node(state: AgentState) -> AgentState:
         ]
     )
     rephrased = response.content.strip()
+    print(f"Rephraser question: {rephrased}")
     return {
         "question": rephrased,
         "retry_count": state["retry_count"] + 1,

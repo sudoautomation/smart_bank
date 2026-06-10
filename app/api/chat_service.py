@@ -2,51 +2,37 @@
 
 from langchain_core.messages import AIMessage, HumanMessage
 
-from app.orchestrator.state import AgentState
 from app.orchestrator.graph import get_graph
+from app.models.models import ChatRequest
 from typing import AsyncGenerator
+from app.utils.guardrails import guard_output
 
-def chat(message: str) -> dict:
-    """Run one agent turn and return the structured response."""
-    initial_state: AgentState = {
-        "messages": [HumanMessage(content=message)],
-        "original_question": message,
-        "question": message,
-        "retry_count": 0,
-        "sources": [],
-        "sql_result": None,
-        "intent": "chat",
-    }
 
-    final_state = get_graph().invoke(initial_state)
+async def chat_stream(request: ChatRequest) -> AsyncGenerator[str, None]:
+        history_messages = []
+        for msg in request.conversation_history:
+            if msg.role == "user":
+                history_messages.append(HumanMessage(content=msg.content))
+            elif msg.role == "assistant":
+                history_messages.append(AIMessage(content=msg.content))
 
-    return {
-        "answer": _extract_answer(final_state),
-        "intent": final_state["intent"],
-        "sources": final_state["sources"],
-        "sql_result": final_state["sql_result"],
-    }
+        messages = history_messages + [HumanMessage(content=request.message)]
 
-async def chat_stream(message: str) -> AsyncGenerator[str, None]:
         initial_state = {
-            "messages":          [HumanMessage(content=message)],
-            "original_question": message,
-            "question":          message,
+            "messages":          messages,
+            "original_question": request.message,
+            "question":          request.message,
             "retry_count":       0,
             "sources":           [],
             "sql_result":        None,
             "intent":            "chat",
         }
         async for event in get_graph().astream_events(initial_state, version="v2"):
-            if event["event"] == "on_chat_model_stream":
+            if (
+                event["event"] == "on_chat_model_stream"
+                and event.get("metadata", {}).get("langgraph_node") == "agent"
+            ):
                 chunk = event["data"]["chunk"]
                 if chunk.content:
-                    yield chunk.content
+                    yield guard_output(chunk.content)
 
-
-def _extract_answer(state: AgentState) -> str:
-    """Return the last AIMessage content that is not a tool call."""
-    for msg in reversed(state["messages"]):
-        if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
-            return msg.content
-    return ""

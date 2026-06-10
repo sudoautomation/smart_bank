@@ -73,7 +73,6 @@ _MAX_ROWS = 50
 
 def execute_sql(sql: str) -> dict:
     """Validate and execute a SELECT query; return columns + rows."""
-    print(f"Executing SQL:\n{sql}\n")
     if _FORBIDDEN.search(sql):
         raise ValueError("Query contains a forbidden keyword.")
 

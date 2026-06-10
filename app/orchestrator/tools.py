@@ -56,11 +56,10 @@ def nl_to_sql_query(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> AgentState:
     """Query the live banking database for specific record-level or real-time data: 
-    account balances, transactions, active loans, fixed deposits (FDs) for a customer/account, credit card details, EMI schedules, or any question referencing a specific account ID or customer."""
+    account balances, transactions, active loans, fixed deposits (FDs) for a customer/account, credit card details, EMI schedules, 
+    or any question referencing a specific account ID or customer."""
     try:
-        print(f"Received question for NL-to-SQL:\n{question}\n")
         sql = generate_sql(question)
-        print(f"Generated SQL:\n{sql}\n")
         result = execute_sql(sql)
     except Exception as exc:
         result = {"query": None, "columns": [], "rows": [], "error": str(exc)}
@@ -71,10 +70,8 @@ def nl_to_sql_query(
         columns = result["columns"]
         rows = result["rows"]
         rows_preview = "\n".join(str(dict(zip(columns, row))) for row in rows[:20])
-        content = (
-            f"SQL executed:\n{result['query']}\n\n"
-            f"Result: {len(rows)} row(s) returned\n{rows_preview}"
-        )
+        content = f"{len(rows)} row(s) returned\n{rows_preview}"
+
     return {
         "sql_result": result,
         "intent": "nl_to_sql",

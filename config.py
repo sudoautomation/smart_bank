@@ -12,10 +12,11 @@ OPENAI_API_KEY  = os.getenv("OPENAI_API_KEY")
 COHERE_API_KEY  = os.getenv("COHERE_API_KEY")
 DATABASE_URL    = os.getenv("DATABASE_URL")
 AGENTIC_URL     = os.getenv("AGENTIC_URL")
+GUARDRAILS_API_KEY = os.getenv("GUARDRAILS_API_KEY")
 
 ### OpenAI Models 
-OPENAI_CHAT_MODEL       = "gpt-4o"
-OPENAI_VLM_MODEL        = "gpt-4o"
+OPENAI_CHAT_MODEL       = "gpt-5.4"
+OPENAI_VLM_MODEL        = "gpt-5.4"
 OPENAI_EMBEDDING_MODEL  = "text-embedding-3-small"
 OPENAI_EMBEDDING_DIMS   = 1536
 
