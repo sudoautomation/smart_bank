@@ -10,7 +10,6 @@ from config import MAX_RETRY, REPHRASER_TEMPERATURE
 
 def agent_node(state: AgentState) -> AgentState:
     """Invoke the LLM. Emits tool calls or a final answer."""
-    print(f"Agent received question: {state['question']}")
     llm = get_chat_llm().bind_tools(TOOLS)
     response = llm.invoke(
         [SystemMessage(content=AGENT_SYSTEM_PROMPT)] + state["messages"],
@@ -27,7 +26,6 @@ def agent_node(state: AgentState) -> AgentState:
     else:
         updates["intent"] = state["intent"] or "chat"
 
-    print(f"Agent emitted intent: {updates['intent']}")
     return updates
 
 
@@ -59,8 +57,10 @@ def rephraser_node(state: AgentState) -> AgentState:
 
 
 def after_tools_routing(state: AgentState) -> str:
-    """Rephrase and retry if RAG returned nothing and budget remains, else back to agent."""
-    rag_empty = state["intent"] == "rag" and not state["sources"]
+    """Rephrase and retry if RAG Sources returned nothing."""
+    # rag_empty = state["intent"] == "rag" and not state["sources"]
+    rag_empty = state["intent"] == "rag" and not state["score"]<0.3
     if rag_empty and state["retry_count"] < MAX_RETRY:
+        print("RAG returned no results, routing to rephraser.")
         return "rephraser"
     return "agent"

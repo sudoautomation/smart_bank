@@ -54,7 +54,9 @@ def _rerank_chunks(query: str, chunks: list[dict], top_n: int) -> list[dict]:
 def retrieve(query: str) -> list[dict]:
     """Return reranked chunks for a query."""
     vec = _vector_search(query)
+    print("Vector: ", vec)
     fts = _fts_search(query)
+    print("FTS: ",fts)
     fused = _rrf_fusion(vec, fts)
     return _rerank(query, fused)
 

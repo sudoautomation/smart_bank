@@ -13,10 +13,10 @@ router = APIRouter()
 
 @router.post("/chat/stream")
 async def chat_stream_endpoint(request: ChatRequest):
-    try:
-        guard_input(request.message)
-    except GuardrailViolation as exc:
-        raise HTTPException(status_code=400, detail=exc.message)
+    # try:
+    #     guard_input(request.message)
+    # except GuardrailViolation as exc:
+    #     raise HTTPException(status_code=400, detail=exc.message)
 
     async def generate():
         async for token in chat_stream(request):

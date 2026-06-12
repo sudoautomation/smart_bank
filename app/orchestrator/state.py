@@ -15,3 +15,4 @@ class AgentState(TypedDict):
     sql_result:        Optional[dict]
     intent:            str
     tool_call_id:       Optional[str]
+    scores:       Optional[float]

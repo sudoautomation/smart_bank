@@ -16,6 +16,7 @@ def rag_retrieval(
     tool_call_id: Annotated[str, InjectedToolCallId],
 ) -> AgentState:
     """Search the banking knowledge base for general product information, policies, procedures, fees, eligibility, and terms. Use for 'how does X work', 'what are the rules', 'eligibility for', 'documentation needed' type questions."""
+    print(f"RAG retrieval for query: {query}")
     chunks = retrieve(query)
     if not chunks:
         return {
@@ -45,6 +46,7 @@ def rag_retrieval(
     ]
     return {
         "sources": sources,
+        "score": sources["score"],
         "intent": "rag",
         "messages": [ToolMessage(content=content, tool_call_id=tool_call_id)],
     }
@@ -59,6 +61,7 @@ def nl_to_sql_query(
     account balances, transactions, active loans, fixed deposits (FDs) for a customer/account, credit card details, EMI schedules, 
     or any question referencing a specific account ID or customer."""
     try:
+        print(f"NL-to-SQL query for question: {question}")
         sql = generate_sql(question)
         result = execute_sql(sql)
     except Exception as exc:

@@ -34,5 +34,6 @@ async def chat_stream(request: ChatRequest) -> AsyncGenerator[str, None]:
             ):
                 chunk = event["data"]["chunk"]
                 if chunk.content:
-                    yield guard_output(chunk.content)
+                    yield chunk.content
+                    # yield guard_output(chunk.content)
 
