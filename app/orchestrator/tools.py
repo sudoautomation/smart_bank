@@ -46,7 +46,6 @@ def rag_retrieval(
     ]
     return {
         "sources": sources,
-        "score": sources["score"],
         "intent": "rag",
         "messages": [ToolMessage(content=content, tool_call_id=tool_call_id)],
     }

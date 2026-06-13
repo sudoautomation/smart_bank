@@ -5,7 +5,7 @@ from app.utils.prompts import AGENT_SYSTEM_PROMPT, REPHRASER_SYSTEM_PROMPT
 from app.orchestrator.state import AgentState
 from app.orchestrator.tools import TOOLS
 from app.utils.openai_client import get_chat_llm
-from config import MAX_RETRY, REPHRASER_TEMPERATURE
+from config import MAX_RETRY, RELEVANCE_THRESHOLD, REPHRASER_TEMPERATURE
 
 
 def agent_node(state: AgentState) -> AgentState:
@@ -57,10 +57,11 @@ def rephraser_node(state: AgentState) -> AgentState:
 
 
 def after_tools_routing(state: AgentState) -> str:
-    """Rephrase and retry if RAG Sources returned nothing."""
-    # rag_empty = state["intent"] == "rag" and not state["sources"]
-    rag_empty = state["intent"] == "rag" and not state["score"]<0.3
-    if rag_empty and state["retry_count"] < MAX_RETRY:
-        print("RAG returned no results, routing to rephraser.")
+    """Rephrase and retry if RAG scores are below the relevance threshold."""
+    is_rag = state["intent"] in ("rag", "rag_retrieval")
+    sources = state["sources"] or []
+    low_quality = not sources or max(s["score"] for s in sources) < RELEVANCE_THRESHOLD
+    if is_rag and low_quality and state["retry_count"] < MAX_RETRY:
+        print(f"RAG low quality (max score < {RELEVANCE_THRESHOLD}), routing to rephraser.")
         return "rephraser"
     return "agent"
